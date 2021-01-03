@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include "texture.hpp"
+#include "ConnectionIii-Rj3W.hpp"
 
 #define SWIDTH 800
 #define SHEIGHT 900
@@ -17,6 +18,8 @@
 
 #define POOPCNT 5
 #define PREGENSPD 1
+
+#define VTIME .5f
 
 using namespace std;
 using namespace sf;
@@ -60,6 +63,20 @@ int main()
     {
         cout << "Error!" << endl;
     }
+    
+    Font font;
+    if (!font.loadFromMemory(ConnectionIii_Rj3W_otf, ConnectionIii_Rj3W_otf_len))
+    {
+        cout << "Error!" << endl;
+    }
+
+    Text text;
+    text.setFont(font);
+    text.setFillColor(Color::Black);
+    text.setCharacterSize(24);
+    text.setPosition(0, 0);
+
+    Clock invincibleClock;
 
     float dt;
 
@@ -75,11 +92,14 @@ int main()
 
         movement = 0;
 
+        poops = deque<Poop>();
         poops.push_back(Poop(texture));
 
         charactor = Sprite(texture);
         charactor.setTextureRect(IntRect(0, 0, 25, 25));
         charactor.setPosition(SWIDTH / 2, SHEIGHT - CHEIGHT);
+
+        text.setString(to_string(health));
     };
 
     auto newPoop = [&]()
@@ -131,9 +151,16 @@ int main()
         {
             elem.move(0, poopSpeed * dt);
 
-            if (elem.getGlobalBounds().intersects(charactor.getGlobalBounds()))
+            if (elem.getGlobalBounds().intersects(charactor.getGlobalBounds()) && invincibleClock.getElapsedTime().asSeconds() > VTIME)
             {
-                cout << "dead" << endl;
+                health -= 1;
+                text.setString(to_string(health));
+                if (health == 0)
+                {
+                    reset();
+                    break;
+                }
+                invincibleClock.restart();
             }
         }
         if (poops[0].getPosition().y > SHEIGHT + PHEIGHT)
@@ -157,6 +184,8 @@ int main()
         {
             window.draw(elem);
         }
+
+        window.draw(text);
 
         window.display();
     }
